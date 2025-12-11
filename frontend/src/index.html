@@ -5,33 +5,54 @@
     <title>便签板</title>
     <link rel="stylesheet" href="note.css">
 </head>
-
 <body>
+
 <h1>便签板</h1>
 
 <!-- 输入区域 -->
 <div id="inputArea">
     <input id="newNoteTitle" placeholder="输入标题">
-
     <textarea id="newNoteContent" rows="3" placeholder="输入任务内容（支持 HTML）"></textarea>
-
     <label>
         运行周期（小时）：
         <input id="intervalHours" type="number" min="1" value="1" style="width: 100px; display:inline-block;">
     </label>
-
     <button onclick="createNote()">新建便签</button>
 </div>
 
 <h2>便签列表</h2>
 <div id="notes"></div>
 
+<!-- 美化用户名输入模态框 -->
+<div id="usernameModal">
+    <div id="usernameModalContent">
+        <h2>请输入用户名</h2>
+        <input type="text" id="usernameInput" placeholder="用户名">
+        <br>
+        <button onclick="submitUsername()">确认</button>
+    </div>
+</div>
+
 <script>
     const apiBase = 'http://localhost:3000/api';
+    let username = '';
+
+    // 提交用户名
+    function submitUsername() {
+        const input = document.getElementById('usernameInput').value.trim();
+        if (!input) {
+            alert('用户名不能为空');
+            return;
+        }
+        username = input;
+        document.getElementById('usernameModal').style.display = 'none';
+        fetchNotes();
+        setInterval(fetchNotes, 60 * 1000);
+    }
 
     // 获取便签列表
     async function fetchNotes() {
-        const res = await fetch(`${apiBase}/notes`);
+        const res = await fetch(`${apiBase}/notes?username=${encodeURIComponent(username)}`);
         const data = await res.json();
         displayNotes(data);
     }
@@ -43,13 +64,11 @@
         notes.forEach(note => {
             const div = document.createElement('div');
             div.className = 'note';
-
             div.innerHTML = `
-                <div class="note-title">${note.title || '无标题'}</div>
-                <div class="note-content">${note.content}</div>
-                <div class="note-interval">每 ${note.intervalHours} 小时运行一次</div>
-            `;
-
+            <div class="note-title">${note.title || '无标题'}</div>
+            <div class="note-content">${note.content}</div>
+            <div class="note-interval">每 ${note.intervalHours} 小时运行一次</div>
+        `;
             notesDiv.appendChild(div);
         });
     }
@@ -65,7 +84,7 @@
         const res = await fetch(`${apiBase}/notes`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, content, intervalHours })
+            body: JSON.stringify({ username, title, content, intervalHours })
         });
 
         await res.json();
@@ -76,10 +95,6 @@
 
         fetchNotes();
     }
-
-    fetchNotes();
-    setInterval(fetchNotes, 60 * 1000);
 </script>
-
 </body>
 </html>
