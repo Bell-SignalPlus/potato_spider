@@ -1,0 +1,89 @@
+body {
+    font-family: "Segoe UI", Arial;
+    padding: 20px;
+    background: #f5f6fa;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+#inputArea {
+    background: #fff;
+    padding: 20px;
+    width: 420px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    margin-bottom: 25px;
+}
+
+#notes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.note {
+    width: 240px;
+    min-height: 140px;
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.1s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.note:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.note-title {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: #333;
+    word-break: break-all;
+}
+
+.note-content {
+    flex: 1;
+    font-size: 14px;
+    color: #444;
+    margin-bottom: 10px;
+    overflow-y: auto;
+    max-height: 120px;
+}
+
+.note-interval {
+    font-size: 12px;
+    color: #888;
+    margin-top: 5px;
+}
+
+textarea, input {
+    width: 100%;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    box-sizing: border-box;
+    margin-bottom: 12px;
+}
+
+button {
+    padding: 8px 16px;
+    background: #4e8df5;
+    border: none;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+button:hover {
+    background: #3c74d9;
+}

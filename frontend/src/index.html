@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>便签板</title>
+    <link rel="stylesheet" href="note.css">
+</head>
+
+<body>
+<h1>便签板</h1>
+
+<!-- 输入区域 -->
+<div id="inputArea">
+    <input id="newNoteTitle" placeholder="输入标题">
+
+    <textarea id="newNoteContent" rows="3" placeholder="输入任务内容（支持 HTML）"></textarea>
+
+    <label>
+        运行周期（小时）：
+        <input id="intervalHours" type="number" min="1" value="1" style="width: 100px; display:inline-block;">
+    </label>
+
+    <button onclick="createNote()">新建便签</button>
+</div>
+
+<h2>便签列表</h2>
+<div id="notes"></div>
+
+<script>
+    const apiBase = 'http://localhost:3000/api';
+
+    // 获取便签列表
+    async function fetchNotes() {
+        const res = await fetch(`${apiBase}/notes`);
+        const data = await res.json();
+        displayNotes(data);
+    }
+
+    // 显示便签
+    function displayNotes(notes) {
+        const notesDiv = document.getElementById('notes');
+        notesDiv.innerHTML = '';
+        notes.forEach(note => {
+            const div = document.createElement('div');
+            div.className = 'note';
+
+            div.innerHTML = `
+                <div class="note-title">${note.title || '无标题'}</div>
+                <div class="note-content">${note.content}</div>
+                <div class="note-interval">每 ${note.intervalHours} 小时运行一次</div>
+            `;
+
+            notesDiv.appendChild(div);
+        });
+    }
+
+    // 新建便签
+    async function createNote() {
+        const title = document.getElementById('newNoteTitle').value.trim();
+        const content = document.getElementById('newNoteContent').value;
+        const intervalHours = Number(document.getElementById('intervalHours').value);
+
+        if (!content.trim()) return alert('请输入内容');
+
+        const res = await fetch(`${apiBase}/notes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, content, intervalHours })
+        });
+
+        await res.json();
+
+        // 清空输入框
+        document.getElementById('newNoteTitle').value = '';
+        document.getElementById('newNoteContent').value = '';
+
+        fetchNotes();
+    }
+
+    fetchNotes();
+    setInterval(fetchNotes, 60 * 1000);
+</script>
+
+</body>
+</html>
