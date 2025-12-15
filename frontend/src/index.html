@@ -37,6 +37,19 @@
     const apiBase = 'http://localhost:3000/api';
     let username = '';
 
+    window.onload = function() {
+        const savedUsername = localStorage.getItem('username');
+        if (savedUsername) {
+            username = savedUsername;
+            document.getElementById('usernameModal').style.display = 'none';
+            fetchNotes();
+            setInterval(fetchNotes, 60 * 1000);
+        } else {
+            // 如果没有用户名，显示模态框
+            document.getElementById('usernameModal').style.display = 'block';
+        }
+    };
+
     // 提交用户名
     function submitUsername() {
         const input = document.getElementById('usernameInput').value.trim();
@@ -45,6 +58,7 @@
             return;
         }
         username = input;
+        localStorage.setItem('username', username);
         document.getElementById('usernameModal').style.display = 'none';
         fetchNotes();
         setInterval(fetchNotes, 60 * 1000);

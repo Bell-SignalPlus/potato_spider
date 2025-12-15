@@ -4,22 +4,31 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+const { exec } = require('child_process');
+
+const { startScheduler } = require('./scheduler');
 
 const app = express();
 const port = 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
-
 // 数据存储目录
 const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
 
+startScheduler({
+    dataDir,
+    intervalMs: 10 * 1000, // 每分钟扫一次
+});
+
+
 // 默认便签模板
-function defaultNote() {
+function defaultNote(id) {
     return [
         {
-            id: 1,
+            id: id,
             title: "示例便签",
             content: "<b>Hello World</b>",
             intervalHours: 1,
@@ -33,7 +42,7 @@ function defaultNote() {
 function loadNotes(username) {
     const filePath = path.join(dataDir, `${username}.json`);
     if (!fs.existsSync(filePath)) {
-        const notes = defaultNote();
+        const notes = defaultNote(uuidv4());
         fs.writeFileSync(filePath, JSON.stringify(notes, null, 2));
         return notes;
     }
@@ -42,7 +51,7 @@ function loadNotes(username) {
     } catch (err) {
         console.error(err);
         // 出现读取错误，也初始化默认
-        const notes = defaultNote();
+        const notes = defaultNote(uuidv4());
         fs.writeFileSync(filePath, JSON.stringify(notes, null, 2));
         return notes;
     }
@@ -71,7 +80,7 @@ app.post('/api/notes', (req, res) => {
 
     const notes = loadNotes(username);
 
-    const id = notes.length ? notes[notes.length - 1].id + 1 : 1;
+    const id = uuidv4();
     const note = {
         id,
         title: title || "无标题",
@@ -87,6 +96,16 @@ app.post('/api/notes', (req, res) => {
     res.json(note);
 });
 
+// app.post('/run-command', (req, res) => {
+//     const cmd = req.body.cmd; // 从前端传来的命令，注意安全性！
+//
+//     exec(cmd, (error, stdout, stderr) => {
+//         if (error) return res.status(500).send(error.message);
+//         if (stderr) console.error(stderr);
+//         res.json({ output: stdout.trim() });
+//     });
+// });
+//
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
