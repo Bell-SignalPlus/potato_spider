@@ -31,6 +31,7 @@ function defaultNote(id) {
             id: id,
             title: "示例便签",
             content: "<b>Hello World</b>",
+            taskDesc: "Return Hello World in bold",
             intervalHours: 1,
             createdAt: Date.now(),
             lastRunTime: null
@@ -74,9 +75,9 @@ app.get('/api/notes', (req, res) => {
 
 // 新建便签
 app.post('/api/notes', (req, res) => {
-    const { username, title, content, intervalHours } = req.body;
+    const { username, title, taskDesc, intervalHours } = req.body;
     if (!username) return res.status(400).json({ error: 'username is required' });
-    if (!content) return res.status(400).json({ error: 'content is required' });
+    if (!taskDesc) return res.status(400).json({ error: 'content is required' });
 
     const notes = loadNotes(username);
 
@@ -84,7 +85,8 @@ app.post('/api/notes', (req, res) => {
     const note = {
         id,
         title: title || "无标题",
-        content,
+        taskDesc: taskDesc,
+        content: "Not update yet",
         intervalHours: intervalHours || 1,
         createdAt: Date.now(),
         lastRunTime: null

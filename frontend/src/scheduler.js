@@ -11,7 +11,7 @@ async function executeCommand(note) {
         // 构造要执行的命令
         // 假设你想输出环境变量 MY_ENV
         // 在 Linux/macOS
-        const cmd = 'ls';
+        const cmd = `python3 /Users/zihao/PyCharmMiscProject/browser_use_test.py "${note.content}"`;
         // 在 Windows 可以用: const cmd = 'echo %MY_ENV%';
         // const response = await fetch('http://localhost:3000/run-command', {
         //     method: 'POST',
@@ -50,6 +50,7 @@ function shouldRun(note) {
 // ========================
 async function runNote(note) {
     const result = await executeCommand(note);
+    console.log(`Note ${note.id} executed, result: ${result}`);
     note.content = result;
     note.lastRunTime = Date.now();
 }
