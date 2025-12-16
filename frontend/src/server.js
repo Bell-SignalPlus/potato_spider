@@ -98,6 +98,46 @@ app.post('/api/notes', (req, res) => {
     res.json(note);
 });
 
+// 编辑便签
+app.put('/api/notes/:id', (req, res) => {
+    const username = req.query.username;
+    const noteId = req.params.id;
+    const { title, taskDesc, content, intervalHours } = req.body;
+
+    if (!username) return res.status(400).json({ error: 'username is required' });
+
+    const notes = loadNotes(username);
+    const noteIndex = notes.findIndex(n => n.id === noteId);
+    if (noteIndex === -1) return res.status(404).json({ error: 'note not found' });
+
+    // 更新字段
+    if (title !== undefined) notes[noteIndex].title = title;
+    if (taskDesc !== undefined) notes[noteIndex].taskDesc = taskDesc;
+    if (content !== undefined) notes[noteIndex].content = content;
+    if (intervalHours !== undefined) notes[noteIndex].intervalHours = intervalHours;
+
+    saveNotes(username, notes);
+    res.json(notes[noteIndex]);
+});
+
+// 删除便签
+app.delete('/api/notes/:id', (req, res) => {
+    const username = req.query.username;
+    const noteId = req.params.id;
+
+    if (!username) return res.status(400).json({ error: 'username is required' });
+
+    const notes = loadNotes(username);
+    const newNotes = notes.filter(n => n.id !== noteId);
+
+    if (newNotes.length === notes.length) {
+        return res.status(404).json({ error: 'note not found' });
+    }
+
+    saveNotes(username, newNotes);
+    res.json({ success: true });
+});
+
 // app.post('/run-command', (req, res) => {
 //     const cmd = req.body.cmd; // 从前端传来的命令，注意安全性！
 //

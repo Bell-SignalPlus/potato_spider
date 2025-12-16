@@ -23,7 +23,7 @@
 <h2>便签列表</h2>
 <div id="notes"></div>
 
-<!-- 美化用户名输入模态框 -->
+<!-- 用户名模态框 -->
 <div id="usernameModal">
     <div id="usernameModalContent">
         <h2>请输入用户名</h2>
@@ -31,6 +31,11 @@
         <br>
         <button onclick="submitUsername()">确认</button>
     </div>
+</div>
+
+<!-- 便签详情弹窗 -->
+<div id="noteDetailModal" onclick="hideNoteDetail()">
+    <div id="noteDetailContent" onclick="event.stopPropagation()"></div>
 </div>
 
 <script>
@@ -45,7 +50,6 @@
             fetchNotes();
             setInterval(fetchNotes, 60 * 1000);
         } else {
-            // 如果没有用户名，显示模态框
             document.getElementById('usernameModal').style.display = 'block';
         }
     };
@@ -53,10 +57,7 @@
     // 提交用户名
     function submitUsername() {
         const input = document.getElementById('usernameInput').value.trim();
-        if (!input) {
-            alert('用户名不能为空');
-            return;
-        }
+        if (!input) { alert('用户名不能为空'); return; }
         username = input;
         localStorage.setItem('username', username);
         document.getElementById('usernameModal').style.display = 'none';
@@ -83,6 +84,11 @@
             <div class="note-task-desc">${note.taskDesc}</div>
             <div class="note-content">${note.content}</div>
             <div class="note-interval">每 ${note.intervalHours} 小时运行一次</div>
+            <div class="note-actions">
+                <button onclick="showNoteDetail('${note.taskDesc}', '${note.content}')">查看详情</button>
+                <button onclick="editNote('${note.id}')">编辑</button>
+                <button onclick="deleteNote('${note.id}')">删除</button>
+            </div>
         `;
             notesDiv.appendChild(div);
         });
@@ -96,19 +102,69 @@
 
         if (!taskDesc.trim()) return alert('请输入内容');
 
-        const res = await fetch(`${apiBase}/notes`, {
+        await fetch(`${apiBase}/notes`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, title, taskDesc, intervalHours })
+            body: JSON.stringify({ username, title, taskDesc, content: taskDesc, intervalHours })
         });
 
-        await res.json();
-
-        // 清空输入框
         document.getElementById('newNoteTitle').value = '';
         document.getElementById('newTaskDesc').value = '';
+        fetchNotes();
+    }
+
+    // 删除便签
+    async function deleteNote(id) {
+        if (!confirm('确定要删除这个便签吗？')) return;
+        await fetch(`${apiBase}/notes/${id}?username=${encodeURIComponent(username)}`, {
+            method: 'DELETE'
+        });
+        fetchNotes();
+    }
+
+    // 编辑便签
+    async function editNote(id) {
+        const newTitle = prompt('输入新标题:');
+        if (newTitle === null) return; // 取消
+        const newTaskDesc = prompt('输入新任务内容:');
+        if (newTaskDesc === null) return;
+        const newInterval = prompt('输入新的运行周期(小时):', '1');
+        if (newInterval === null) return;
+
+        await fetch(`${apiBase}/notes/${id}?username=${encodeURIComponent(username)}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                title: newTitle,
+                taskDesc: newTaskDesc,
+                content: 'Not update yet',
+                intervalHours: Number(newInterval)
+            })
+        });
 
         fetchNotes();
+    }
+
+    // 显示便签详情
+    function showNoteDetail(taskDesc, content) {
+        const modal = document.getElementById('noteDetailModal');
+        const contentDiv = document.getElementById('noteDetailContent');
+
+        // 格式化显示为四行，content 允许渲染 HTML
+        contentDiv.innerHTML = `
+        <div><strong>任务描述：</strong></div>
+        <div>${taskDesc}</div>
+        <div><strong>执行结果：</strong></div>
+        <div>${content}</div>
+    `;
+
+        modal.style.display = 'flex';
+    }
+
+
+    // 隐藏详情弹窗
+    function hideNoteDetail() {
+        document.getElementById('noteDetailModal').style.display = 'none';
     }
 </script>
 </body>
