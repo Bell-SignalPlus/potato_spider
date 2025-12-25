@@ -11,13 +11,15 @@ async function executeCommand(note) {
         // 构造要执行的命令
         // 假设你想输出环境变量 MY_ENV
         // 在 Linux/macOS
-        const cmd = `python3 /Users/zihao/PyCharmMiscProject/browser_use_test.py "${note.content}"`;
+        // const cmd = `python3 /Users/zihao/PyCharmMiscProject/browser_use_test.py "${note.taskDesc} Return the result in html display."`;
+        const cmd = `~/myenv/bin/python3 /home/zihao/website/browser_use_test.py "${note.taskDesc}"`;
         // 在 Windows 可以用: const cmd = 'echo %MY_ENV%';
         // const response = await fetch('http://localhost:3000/run-command', {
         //     method: 'POST',
         //     headers: {'Content-Type': 'application/json'},
         //     body: JSON.stringify({cmd: cmd}) // Linux/macOS
         // });
+        console.log("executing command:", cmd);
         exec(cmd, (error, stdout, stderr) => {
             if (error) return reject("Exec error: " + error.message);
             if (stderr) return reject("Exec error: " + stderr);
@@ -53,6 +55,7 @@ async function runNote(note) {
     console.log(`Note ${note.id} executed, result: ${result}`);
     note.content = result;
     note.lastRunTime = Date.now();
+    note.updatedAt = Date.now();
 }
 
 // ========================
@@ -74,15 +77,28 @@ async function processUserFile(filePath) {
             try {
                 await runNote(note);
                 changed = true;
+
+                let latestNotes;
+                try {
+                    latestNotes = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+                } catch (err) {
+                    console.error(`Failed to read latest ${filePath}`, err);
+                    continue;
+                }
+                const index = latestNotes.findIndex(n => n.id === note.id);
+                if (index !== -1) {
+                    latestNotes[index] = note; // 更新执行后的 note
+                    fs.writeFileSync(filePath, JSON.stringify(latestNotes, null, 2));
+                }
             } catch (err) {
                 console.error(`Run note failed: ${note.id}`, err);
             }
         }
     }
 
-    if (changed) {
-        fs.writeFileSync(filePath, JSON.stringify(notes, null, 2));
-    }
+    // if (changed) {
+    //     fs.writeFileSync(filePath, JSON.stringify(notes, null, 2));
+    // }
 }
 
 // ========================

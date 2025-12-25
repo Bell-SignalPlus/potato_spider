@@ -15,54 +15,65 @@
     <textarea id="newTaskDesc" rows="3" placeholder="输入任务内容（支持 HTML）"></textarea>
     <label>
         运行周期（小时）：
-        <input id="intervalHours" type="number" min="1" value="1" style="width: 100px; display:inline-block;">
+        <input id="intervalHours" type="number" min="1" value="24" style="width: 100px; display:inline-block;">
     </label>
     <button onclick="createNote()">新建便签</button>
+    <button onclick="changeUsername()">修改用户名</button>
 </div>
 
 <h2>便签列表</h2>
 <div id="notes"></div>
-
-<!-- 用户名模态框 -->
-<div id="usernameModal">
-    <div id="usernameModalContent">
-        <h2>请输入用户名</h2>
-        <input type="text" id="usernameInput" placeholder="用户名">
-        <br>
-        <button onclick="submitUsername()">确认</button>
-    </div>
-</div>
 
 <!-- 便签详情弹窗 -->
 <div id="noteDetailModal" onclick="hideNoteDetail()">
     <div id="noteDetailContent" onclick="event.stopPropagation()"></div>
 </div>
 
+<!-- 编辑便签弹窗 -->
+<div id="editNoteModal" onclick="hideEditModal()">
+    <div id="editNoteContent" onclick="event.stopPropagation()">
+        <h3>编辑便签</h3>
+        <input id="editNoteTitle" placeholder="标题">
+        <textarea id="editNoteTaskDesc" rows="3" placeholder="任务内容"></textarea>
+        <label>
+            运行周期（小时）：
+            <input id="editNoteInterval" type="number" min="1" value="1" style="width: 100px;">
+        </label>
+        <br>
+        <button onclick="saveEditNote()">保存</button>
+        <button onclick="hideEditModal()">取消</button>
+    </div>
+</div>
+
 <script>
-    const apiBase = 'http://localhost:3000/api';
+    const DEFAULT_TASK_DESC = '. Return the result in html format.';
+    const apiBase = 'http://100.103.163.38:5000/api';
+    // const apiBase = 'http://localhost:4901/api';
     let username = '';
 
     window.onload = function() {
         const savedUsername = localStorage.getItem('username');
         if (savedUsername) {
             username = savedUsername;
-            document.getElementById('usernameModal').style.display = 'none';
-            fetchNotes();
-            setInterval(fetchNotes, 60 * 1000);
         } else {
-            document.getElementById('usernameModal').style.display = 'block';
+            localStorage.setItem('username', 'default');
+            username = 'default';
         }
+        fetchNotes();
+        document.getElementById('newTaskDesc').value = DEFAULT_TASK_DESC.trim();
+        setInterval(fetchNotes, 60 * 1000);
     };
 
-    // 提交用户名
-    function submitUsername() {
-        const input = document.getElementById('usernameInput').value.trim();
-        if (!input) { alert('用户名不能为空'); return; }
-        username = input;
-        localStorage.setItem('username', username);
-        document.getElementById('usernameModal').style.display = 'none';
-        fetchNotes();
-        setInterval(fetchNotes, 60 * 1000);
+    // 修改用户名
+    function changeUsername() {
+        alert('节省资源，暂时不支持修改，共用一组数据');
+        return;
+        // const newUsername = prompt('输入新用户名:', username);
+        // if (!newUsername) return;
+        // username = newUsername.trim();
+        // localStorage.setItem('username', username);
+        // fetchNotes();
+        // alert('用户名已修改为：' + username);
     }
 
     // 获取便签列表
@@ -85,14 +96,26 @@
             <div class="note-content">${note.content}</div>
             <div class="note-interval">每 ${note.intervalHours} 小时运行一次</div>
             <div class="note-actions">
-                <button onclick="showNoteDetail('${note.taskDesc}', '${note.content}')">查看详情</button>
-                <button onclick="editNote('${note.id}')">编辑</button>
-                <button onclick="deleteNote('${note.id}')">删除</button>
+                <button class="view-detail-btn">查看详情</button>
+                <button class="edit-btn">编辑</button>
+                <button class="delete-btn">删除</button>
             </div>
         `;
             notesDiv.appendChild(div);
+
+            // 动态绑定事件
+            div.querySelector('.view-detail-btn').addEventListener('click', () => {
+                showNoteDetail(note.taskDesc, note.content);
+            });
+            div.querySelector('.delete-btn').addEventListener('click', () => {
+                deleteNote(note.id);
+            });
+            div.querySelector('.edit-btn').addEventListener('click', () => {
+                editNote(note.id, note.title, note.taskDesc, note.intervalHours);
+            });
         });
     }
+
 
     // 新建便签
     async function createNote() {
@@ -109,7 +132,7 @@
         });
 
         document.getElementById('newNoteTitle').value = '';
-        document.getElementById('newTaskDesc').value = '';
+        document.getElementById('newTaskDesc').value = DEFAULT_TASK_DESC.trim();
         fetchNotes();
     }
 
@@ -122,26 +145,40 @@
         fetchNotes();
     }
 
-    // 编辑便签
-    async function editNote(id) {
-        const newTitle = prompt('输入新标题:');
-        if (newTitle === null) return; // 取消
-        const newTaskDesc = prompt('输入新任务内容:');
-        if (newTaskDesc === null) return;
-        const newInterval = prompt('输入新的运行周期(小时):', '1');
-        if (newInterval === null) return;
+    // 显示编辑弹窗
+    function editNote(id, title, taskDesc, intervalHours) {
+        editingNoteId = id;
+        document.getElementById('editNoteTitle').value = title;
+        document.getElementById('editNoteTaskDesc').value = taskDesc;
+        document.getElementById('editNoteInterval').value = intervalHours;
+        document.getElementById('editNoteModal').style.display = 'flex';
+    }
 
-        await fetch(`${apiBase}/notes/${id}?username=${encodeURIComponent(username)}`, {
+    function hideEditModal() {
+        document.getElementById('editNoteModal').style.display = 'none';
+        editingNoteId = null;
+    }
+
+    // 保存编辑
+    async function saveEditNote() {
+        const newTitle = document.getElementById('editNoteTitle').value.trim();
+        const newTaskDesc = document.getElementById('editNoteTaskDesc').value;
+        const newInterval = Number(document.getElementById('editNoteInterval').value);
+
+        if (!newTaskDesc.trim()) return alert('请输入任务内容');
+
+        await fetch(`${apiBase}/notes/${editingNoteId}?username=${encodeURIComponent(username)}`, {
             method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 title: newTitle,
                 taskDesc: newTaskDesc,
                 content: 'Not update yet',
-                intervalHours: Number(newInterval)
+                intervalHours: newInterval
             })
         });
 
+        hideEditModal();
         fetchNotes();
     }
 

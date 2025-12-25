@@ -10,7 +10,16 @@ const { exec } = require('child_process');
 const { startScheduler } = require('./scheduler');
 
 const app = express();
-const port = 3000;
+
+
+
+const port = process.env.PORT || 5000;
+// const host = process.env.HOST || '127.0.0.1';
+const host = '100.103.163.38'
+
+app.listen(port, host, () => {
+    console.log(`Server running at https://${host}:${port}`);
+});
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -34,6 +43,7 @@ function defaultNote(id) {
             taskDesc: "Return Hello World in bold",
             intervalHours: 1,
             createdAt: Date.now(),
+            updatedAt: Date.now(),
             lastRunTime: null
         }
     ];
@@ -80,6 +90,9 @@ app.post('/api/notes', (req, res) => {
     if (!taskDesc) return res.status(400).json({ error: 'content is required' });
 
     const notes = loadNotes(username);
+    if (notes.length >= 10) {
+        return res.status(400).json({ error: '最多只能创建10个便签' });
+    }
 
     const id = uuidv4();
     const note = {
@@ -89,6 +102,7 @@ app.post('/api/notes', (req, res) => {
         content: "Not update yet",
         intervalHours: intervalHours || 1,
         createdAt: Date.now(),
+        updatedAt: Date.now(),
         lastRunTime: null
     };
 
@@ -115,6 +129,8 @@ app.put('/api/notes/:id', (req, res) => {
     if (taskDesc !== undefined) notes[noteIndex].taskDesc = taskDesc;
     if (content !== undefined) notes[noteIndex].content = content;
     if (intervalHours !== undefined) notes[noteIndex].intervalHours = intervalHours;
+    notes[noteIndex].updatedAt = Date.now();
+    notes[noteIndex].lastRunTime = 0; // 重置上次执行时间，确保下次调度时会执行
 
     saveNotes(username, notes);
     res.json(notes[noteIndex]);
@@ -148,6 +164,5 @@ app.delete('/api/notes/:id', (req, res) => {
 //     });
 // });
 //
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
-});
+
+
