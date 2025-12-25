@@ -151,11 +151,15 @@
         document.getElementById('editNoteTitle').value = title;
         document.getElementById('editNoteTaskDesc').value = taskDesc;
         document.getElementById('editNoteInterval').value = intervalHours;
-        document.getElementById('editNoteModal').style.display = 'flex';
+
+        const modal = document.getElementById('editNoteModal');
+        modal.style.display = 'flex'; // 弹出
     }
 
+    // 隐藏编辑弹窗
     function hideEditModal() {
-        document.getElementById('editNoteModal').style.display = 'none';
+        const modal = document.getElementById('editNoteModal');
+        modal.style.display = 'none';
         editingNoteId = null;
     }
 
@@ -182,12 +186,11 @@
         fetchNotes();
     }
 
-    // 显示便签详情
+    // 显示详情弹窗
     function showNoteDetail(taskDesc, content) {
         const modal = document.getElementById('noteDetailModal');
         const contentDiv = document.getElementById('noteDetailContent');
 
-        // 格式化显示为四行，content 允许渲染 HTML
         contentDiv.innerHTML = `
         <div><strong>任务描述：</strong></div>
         <div>${taskDesc}</div>
@@ -198,11 +201,12 @@
         modal.style.display = 'flex';
     }
 
-
     // 隐藏详情弹窗
     function hideNoteDetail() {
-        document.getElementById('noteDetailModal').style.display = 'none';
+        const modal = document.getElementById('noteDetailModal');
+        modal.style.display = 'none';
     }
+
 </script>
 </body>
 </html>
