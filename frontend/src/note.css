@@ -7,8 +7,20 @@ body {
     color: #333;
 }
 
+header {
+    text-align: center;
+}
+
 h1, h2, h3 {
     margin: 0 0 15px 0;
+}
+
+h1 {
+    font-size: 2em;
+}
+
+h2 {
+    font-size: 1.5em;
 }
 
 /* ======================== 卡片 & 输入区域 ======================== */
@@ -19,6 +31,7 @@ h1, h2, h3 {
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     margin-bottom: 25px;
     max-width: 450px;
+    margin: 0 auto;
 }
 
 .input-row {
@@ -33,7 +46,7 @@ h1, h2, h3 {
     font-weight: bold;
 }
 
-input, textarea {
+.input-field {
     padding: 10px;
     border-radius: 8px;
     border: 1px solid #ccc;
@@ -45,15 +58,83 @@ input, textarea {
 textarea {
     resize: vertical;
 }
+/* ======================== 认为列表 ======================== */
+.notes-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: flex-start; /* 从左端对齐 */
+}
 
-/* ======================== 按钮 ======================== */
+.note {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px; /* 增大认为大小 */
+    width: 400px; /* 增大认为宽度 */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: 0.3s;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px; /* 调整底部间距 */
+}
+
+.note:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+
+.note-title {
+    font-weight: bold;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.note-task-desc {
+    font-size: 15px;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.note-content {
+    font-size: 15px;
+    color: #333;
+    max-height: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 6;
+    -webkit-box-orient: vertical;
+    margin-bottom: 10px;
+}
+
+.note-interval, .note-last-run-time {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 10px;
+}
+
+.note-actions {
+    display: flex;  /* 使用flex布局将按钮排成一行 */
+    gap: 10px;      /* 按钮之间的间距 */
+    margin-top: 10px;
+}
+
+.note-actions button {
+    font-size: 12px;  /* 调整按钮字体大小 */
+    padding: 6px 12px; /* 调整按钮的大小 */
+    flex: 1; /* 使按钮宽度均匀分配 */
+    cursor: pointer;
+}
+
+/* ======================== 按钮样式 ======================== */
 button {
-    padding: 10px 20px;
+    padding: 8px 16px;
     border-radius: 8px;
     font-size: 14px;
     border: none;
     cursor: pointer;
     transition: 0.2s;
+    width: 100%;
 }
 
 .primary-btn {
@@ -78,73 +159,18 @@ button {
     display: flex;
     gap: 10px;
     margin-top: 10px;
+    justify-content: center;
 }
 
-/* ======================== 便签列表 ======================== */
-.notes-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.note {
-    background: #fff;
-    border-radius: 10px;
-    padding: 15px;
-    width: 220px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    transition: 0.3s;
-    display: flex;
-    flex-direction: column;
-}
-
-.note:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
-}
-
-.note-title {
-    font-weight: bold;
-    font-size: 16px;
-    margin-bottom: 8px;
-}
-
-.note-task-desc {
-    font-size: 14px;
-    color: #555;
-    margin-bottom: 8px;
-}
-
-.note-content {
-    font-size: 14px;
-    color: #333;
-    max-height: 50px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    margin-bottom: 8px;
-}
-
-.note-interval {
-    font-size: 12px;
-    color: #888;
-    margin-bottom: 8px;
-}
-
-.note-actions button {
-    margin-right: 5px;
-}
 
 /* ======================== 弹窗 ======================== */
 .modal {
     display: none;
     position: fixed;
-    top:0; left:0;
+    top: 0; left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     justify-content: center;
     align-items: center;
     z-index: 1000;
@@ -152,30 +178,19 @@ button {
 
 .modal-content {
     background: #fff;
-    padding: 25px;
+    padding: 30px;
     border-radius: 12px;
-    min-width: 300px;
+    min-width: 350px;
     max-width: 90%;
     max-height: 90%;
     overflow-y: auto;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
-/* 遮罩层 */
 #noteDetailModal, #editNoteModal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: none; /* 默认隐藏 */
-    justify-content: center;
-    align-items: center;
-    background: rgba(0,0,0,0.5);
-    z-index: 1000;
+    display: none;
 }
 
-/* 弹窗内容 */
 #noteDetailContent, #editNoteContent {
     background: #fff;
     padding: 20px;
@@ -185,4 +200,13 @@ button {
     max-height: 80%;
     overflow-y: auto;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    word-break: break-all;
+}
+
+strong {
+    font-weight: bold;
+    color: #000;  /* 确保文字颜色可见 */
 }

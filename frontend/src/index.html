@@ -2,53 +2,69 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>便签板</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务板</title>
     <link rel="stylesheet" href="note.css">
 </head>
 <body>
 
-<h1>便签板</h1>
+<header>
+    <h1>任务板</h1>
+</header>
 
-<!-- 输入区域 -->
-<div id="inputArea">
-    <input id="newNoteTitle" placeholder="输入标题">
-    <textarea id="newTaskDesc" rows="3" placeholder="输入任务内容（支持 HTML）"></textarea>
-    <label>
-        运行周期（小时）：
-        <input id="intervalHours" type="number" min="1" value="24" style="width: 100px; display:inline-block;">
-    </label>
-    <button onclick="createNote()">新建便签</button>
-    <button onclick="changeUsername()">修改用户名</button>
+<section id="inputArea" class="card">
+    <input id="newNoteTitle" placeholder="输入标题" class="input-field">
+    <textarea id="newTaskDesc" rows="3" placeholder="输入任务内容（支持 HTML）" class="input-field"></textarea>
+
+    <div class="input-row">
+        <label for="intervalHours">运行周期（小时）：</label>
+        <input id="intervalHours" type="number" min="1" value="24" class="input-field">
+    </div>
+
+    <div class="button-row">
+        <button onclick="createNote()" class="primary-btn">新建任务</button>
+        <button onclick="changeUsername()" class="secondary-btn">修改用户名</button>
+    </div>
+</section>
+
+<!-- 任务列表 -->
+<section>
+    <h2>任务列表</h2>
+    <div id="notes" class="notes-container"></div>
+</section>
+
+<!-- 任务详情弹窗 -->
+<div id="noteDetailModal" class="modal" onclick="hideNoteDetail()">
+    <div id="noteDetailContent" class="modal-content" onclick="event.stopPropagation()"></div>
 </div>
 
-<h2>便签列表</h2>
-<div id="notes"></div>
+<!-- 编辑任务弹窗 -->
+<div id="editNoteModal" class="modal" onclick="hideEditModal()">
+    <div id="editNoteContent" class="modal-content" onclick="event.stopPropagation()">
+        <h3>编辑任务</h3>
+        <input id="editNoteTitle" placeholder="标题" class="input-field">
+        <textarea id="editNoteTaskDesc" rows="3" placeholder="任务内容" class="input-field"></textarea>
+        <div class="input-row">
+            <label for="editNoteInterval">运行周期（小时）：</label>
+            <input id="editNoteInterval" type="number" min="1" value="1" class="input-field">
+        </div>
 
-<!-- 便签详情弹窗 -->
-<div id="noteDetailModal" onclick="hideNoteDetail()">
-    <div id="noteDetailContent" onclick="event.stopPropagation()"></div>
-</div>
-
-<!-- 编辑便签弹窗 -->
-<div id="editNoteModal" onclick="hideEditModal()">
-    <div id="editNoteContent" onclick="event.stopPropagation()">
-        <h3>编辑便签</h3>
-        <input id="editNoteTitle" placeholder="标题">
-        <textarea id="editNoteTaskDesc" rows="3" placeholder="任务内容"></textarea>
-        <label>
-            运行周期（小时）：
-            <input id="editNoteInterval" type="number" min="1" value="1" style="width: 100px;">
-        </label>
-        <br>
-        <button onclick="saveEditNote()">保存</button>
-        <button onclick="hideEditModal()">取消</button>
+        <div class="button-row">
+            <button onclick="saveEditNote()" class="primary-btn">保存</button>
+            <button onclick="hideEditModal()" class="secondary-btn">取消</button>
+        </div>
     </div>
 </div>
+
+
+</body>
+</html>
+
 
 <script>
     const DEFAULT_TASK_DESC = '. Return the result in html format.';
     const apiBase = 'http://100.103.163.38:5000/api';
-    // const apiBase = 'http://localhost:4901/api';
+    // const apiBase = 'http://localhost:22222/api';
     let username = '';
 
     window.onload = function() {
@@ -76,14 +92,14 @@
         // alert('用户名已修改为：' + username);
     }
 
-    // 获取便签列表
+    // 获取任务列表
     async function fetchNotes() {
         const res = await fetch(`${apiBase}/notes?username=${encodeURIComponent(username)}`);
         const data = await res.json();
         displayNotes(data);
     }
 
-    // 显示便签
+    // 显示任务
     function displayNotes(notes) {
         const notesDiv = document.getElementById('notes');
         notesDiv.innerHTML = '';
@@ -92,9 +108,10 @@
             div.className = 'note';
             div.innerHTML = `
             <div class="note-title">${note.title || '无标题'}</div>
-            <div class="note-task-desc">${note.taskDesc}</div>
-            <div class="note-content">${note.content}</div>
+            <div class="note-task-desc">任务：${note.taskDesc}</div>
+            <div class="note-content">结果：${note.content}</div>
             <div class="note-interval">每 ${note.intervalHours} 小时运行一次</div>
+            <div class="note-last-run-time">上次运行时间： ${formatBeijingTime(note.lastRunTime)}</div>
             <div class="note-actions">
                 <button class="view-detail-btn">查看详情</button>
                 <button class="edit-btn">编辑</button>
@@ -117,7 +134,7 @@
     }
 
 
-    // 新建便签
+    // 新建任务
     async function createNote() {
         const title = document.getElementById('newNoteTitle').value.trim();
         const taskDesc = document.getElementById('newTaskDesc').value;
@@ -136,9 +153,9 @@
         fetchNotes();
     }
 
-    // 删除便签
+    // 删除任务
     async function deleteNote(id) {
-        if (!confirm('确定要删除这个便签吗？')) return;
+        if (!confirm('确定要删除这个任务吗？')) return;
         await fetch(`${apiBase}/notes/${id}?username=${encodeURIComponent(username)}`, {
             method: 'DELETE'
         });
@@ -207,6 +224,35 @@
         modal.style.display = 'none';
     }
 
+    // 将时间戳转换为北京时间（UTC+8）并格式化为：年月日 时分秒 + 北京时区
+    function formatBeijingTime(timestamp) {
+        if (timestamp === null || timestamp === undefined || timestamp === 0) {
+            return '未曾运行';
+        }
+        // 创建一个Date对象
+        const date = new Date(timestamp);
+
+        // 将日期转为北京时间 (UTC+8)
+        const options = {
+            timeZone: 'Asia/Shanghai', // 设置时区为北京时区
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false, // 24小时制
+        };
+
+        // 格式化日期
+        const formattedDate = new Intl.DateTimeFormat('zh-CN', options).format(date);
+
+        return `${formattedDate} 北京时间`;
+    }
+
+    // 示例用法
+    const lastRunTime = 1672531199000;  // 示例时间戳
+    const formattedTime = formatBeijingTime(lastRunTime);
+
+    console.log(formattedTime);  // 输出：2023/01/01 12:00:00 北京时间
 </script>
-</body>
-</html>
