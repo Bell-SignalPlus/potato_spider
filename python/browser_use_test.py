@@ -1,13 +1,35 @@
 import logging
 
-import browser_use
-from browser_use import Agent, Browser, ChatGoogle
 import asyncio
 import argparse
 import sys
 import json  # 用于安全打印对象
 import os
 
+# 1️⃣ 强制重置 logging（关键）
+logging.basicConfig(
+    level=logging.CRITICAL,
+    force=True,  # Python 3.8+，非常关键
+)
+
+# 2️⃣ 彻底关闭 logging
+logging.disable(logging.CRITICAL)
+
+# 3️⃣ 静默第三方库常见 logger
+for name in [
+    "browser_use",
+    "browser_use.agent",
+    "browser_use.browser",
+    "playwright",
+    "asyncio",
+    "httpx",
+    "websockets",
+]:
+    logging.getLogger(name).setLevel(logging.CRITICAL)
+    logging.getLogger(name).propagate = False
+
+import browser_use
+from browser_use import Agent, Browser, ChatGoogle, ChatBrowserUse
 from browser_use.agent import service
 
 
@@ -30,6 +52,7 @@ async def example(task: str):
     browser.logger.setLevel(logging.CRITICAL)
 
     llm = ChatGoogle('gemini-2.5-flash-lite')
+#     llm = ChatBrowserUse()
     llm.logger.setLevel(logging.CRITICAL)
 
     agent = Agent(
@@ -65,9 +88,13 @@ def test_example():
     print(str(history))
 
 if __name__ == "__main__":
-    # 如果想用真实命令行参数调用
+    # 如果想用真实命令行参数
+    logging.basicConfig(level=logging.CRITICAL)
     result = main()
-    print(result.final_result())
+    if (result.is_done()) :
+        print(result.final_result())
+    else :
+        print('Execute error last time: ' +  str(result.errors()))
 
     # 如果想直接测试模拟命令行参数，可以注释 main()，改成：
     # test_example()
